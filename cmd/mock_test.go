@@ -37,11 +37,11 @@ var testResp = map[string]struct {
 				{
 					"Task": "Task 1",
 					"Done": false,
-					"CreatedAt": "2023-12-12T09:00:00.310000000-04:00",
-					"CompletedAt: "0001-01-01T00:00:00Z",
+					"CreatedAt": "2019-10-28T08:23:38.310097076-04:00",
+					"CompletedAt": "0001-01-01T00:00:00Z"
 				}
 			],
-			"date": 1702438410,
+			"date": 1572265440,
 			"total_results": 1
 		}`,
 	},

@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const timeFormat = "Jan/02 @15:04"
+
 var (
 	ErrConnection      = errors.New("Connection error")
 	ErrNotFound        = errors.New("Not found")
@@ -31,15 +33,23 @@ type response struct {
 }
 
 func newClient() *http.Client {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
+	tr := &http.Transport{
+		MaxIdleConns:        20,
+		MaxIdleConnsPerHost: 20,
 	}
+	c := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: tr,
+	}
+
 	return c
 }
 
 func getItems(url string) ([]item, error) {
 	r, err := newClient().Get(url)
 	if err != nil {
+		// log.Println("This is where we're erroring out!")
+		// Error: Connection error: Get "http://localhost:8080/todo": read tcp [::1]:61138->[::1]:10011: read: connection reset by peer
 		return nil, fmt.Errorf("%w: %s", ErrConnection, err)
 	}
 	defer r.Body.Close()
@@ -57,9 +67,11 @@ func getItems(url string) ([]item, error) {
 	}
 
 	var resp response
+
 	if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
 		return nil, err
 	}
+
 	if resp.TotalResults == 0 {
 		return nil, fmt.Errorf("%w: No results found", ErrNotFound)
 	}
@@ -71,4 +83,18 @@ func getAll(apiRoot string) ([]item, error) {
 	u := fmt.Sprintf("%s/todo", apiRoot)
 
 	return getItems(u)
+}
+
+func getOne(apiRoot string, id int) (item, error) {
+	u := fmt.Sprintf("%s/todo/%d", apiRoot, id)
+
+	items, err := getItems(u)
+	if err != nil {
+		return item{}, err
+	}
+	if len(items) != 1 {
+		return item{}, fmt.Errorf("%w: Invalid results", ErrInvalid)
+	}
+
+	return items[0], nil
 }
